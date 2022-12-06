@@ -1,0 +1,57 @@
+;CALCULATING AND TESTING CHECKSUM BYTE
+
+DATA_ADDR  EQU 400H
+COUNT      EQU 4
+RAM_ADDR   EQU 30H
+	
+;------------- main program 
+
+ORG 0
+ACALL COPY_DATA
+ACALL CAL_CHKSUM
+ACALL TEST_CHKSUM
+SJMP $
+	
+;------------ copying data from code ROM to data RAM
+COPY_DATA:
+  MOV DPTR, #DATA_ADDR
+  MOV R0, #RAM_ADDR
+  MOV R2, #COUNT
+  H1: CLR A
+  MOVC A, @A+DPTR
+  MOV @R0,A
+  INC DPTR
+  INC R0
+  DJNZ R2, H1
+  RET
+;------------ CALCULATING CHECKSUM BYTE
+CAL_CHKSUM:
+  MOV R1, #RAM_ADDR
+  MOV R2, #COUNT
+  CLR A
+  H2:  ADD A, @R1
+  INC R1
+  DJNZ R2, H2
+  CPL A
+  INC A
+  MOV @R1,A
+  RET
+  
+;------------ TESTING CHECKSUM BYTE
+TEST_CHKSUM:
+  MOV R1, #RAM_ADDR
+  MOV R2, #COUNT+1
+  CLR A
+  H3:ADD A, @R1
+  INC R1
+  DJNZ R2, H3
+  JZ G_1
+  MOV P1, #'B'
+  SJMP OVER
+  G_1:MOV P1, #'G'
+  OVER: RET
+;---------- my data in code ROM
+ORG 400H
+	MYBYTE: DB 25H, 62H, 3FH, 52H
+END
+  
